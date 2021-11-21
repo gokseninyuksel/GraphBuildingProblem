@@ -14,10 +14,9 @@ public class GraphBuildingLine implements GraphBuilder{
     private final Problem problem;
     private final Vertex starting_vertex;
     private final Vertex end_vertex;
-    private Map<Pillar, List<Vertex>> layers;
-    ArrayList<Vertex> vertices;
+    private CircleType circle;
     HashMap<Pair<Pillar, CircleType>, Vertex> map;
-
+    HashMap<Vertex, Pillar> connects;
     public GraphBuildingLine(){
         this.graph = new Graph();
         this.problem = Problem.getInstance();
@@ -26,48 +25,22 @@ public class GraphBuildingLine implements GraphBuilder{
         this.graph.addVertex(this.starting_vertex);
         this.graph.addVertex(this.end_vertex);
         this.map = new LinkedHashMap<>();
+        this.connects = new LinkedHashMap<>();
     }
     @Override
     public void build() {
         final List<Pillar> pillarList = problem.getPillars();
         final List<CircleType> circleTypes = problem.getCircles();
         pillarList.sort(Comparator.comparingInt(Pillar::getY));
-        circleTypes.sort((o1, o2) -> {
-
-            if(o1.getR() == o2.getR()){
-                return -Integer.compare(o1.getCost(),o2.getCost());
-            }
-            return -Integer.compare(o1.getR(), o2.getR());
-
-        });
+        circleTypes.sort((o1, o2) -> -Integer.compare(o1.getR(), o2.getR()));
         final long start = System.nanoTime();
         initGraph(pillarList, circleTypes);
         createDownEdges(pillarList,circleTypes);
-        CircleType highest_circle = circleTypes.get(0);
-        for(int index = 0; index < pillarList.size() - 1; index++){
-            int highest = pillarList.size() -1;
-            Pillar to = pillarList.get(index);
-            int pointer_pillar = circleTypes.size() - 1;
-            int value = to.getY() + 2 * highest_circle.getR();
-            Pair<Integer, Pillar> canConnect = binarySearch(value, pillarList, highest, index + 1);
-            for(CircleType circleType: circleTypes) {
-                if (canConnect != null) {
-                    double searched = ProblemState.distance(to, canConnect.getT()) - circleType.getR();
-                    Pair<Integer, CircleType> canTouch = pointerSearch(pointer_pillar, searched, circleTypes);
-                    if (canTouch != null) {
-                        Vertex fromTouches = map.get(new Pair<>(canConnect.getT(), canTouch.getT()));
-                        Vertex to_Vertex = map.get(new Pair<>(to, circleType));
-                        graph.addEdge(to_Vertex, fromTouches, canTouch.getT().getCost());
-                        pointer_pillar = canTouch.getK();
-                    } else {
-                        break;
-                    }
-                } else {
-                    break;
-                }
+        circle = circleTypes.get(circleTypes.size() - 1);
+        for(Pillar pillar: pillarList){
+            for(CircleType circle: circleTypes) {
             }
-        }
-
+            }
 
     }
 
@@ -81,37 +54,60 @@ public class GraphBuildingLine implements GraphBuilder{
 
 
     }
+    private Pillar binarySearch(List<Pillar> pillarList, int key, Vertex searched, List<CircleType> circleTypes){
 
-    private Pair<Integer,Pillar> binarySearch(int key, List<Pillar> pillars, int highest, int index) {
-        if(index == highest){
-            return new Pair<>(index,pillars.get(index));
-        }
-        return search(key, pillars, index, highest, index);
-    }
-
-
-    public Pair<Integer,Pillar> search(int key, List<Pillar> pillars, int low, int high, int index) {
-        int middle = low  + ((high - low) / 2);
-
-        if(key < pillars.get(index).getY()) {
+        if (key <= pillarList.get(0).getY())
             return null;
+
+        if (key >= pillarList.get(pillarList.size() - 1).getY())
+            return pillarList.get(pillarList.size() - 1);
+
+        // Start binary search algorithm
+        int start = 0;
+        int end = pillarList.size() - 1;
+        int mid = 0;
+
+        // Keep dividing array till further division is not possible
+        while (end - start != 1) {
+            // Calculate middle index
+            mid = (start + end) / 2;
+            // Check if middle element is equal to target
+            if (key  == pillarList.get(mid).getY())
+                // If yes return middle element as middle element = target
+                return pillarList.get(mid);
+            // Check if target is smaller to middle element. If yes, take first half of array including mid
+            if (key  < pillarList.get(mid).getY())
+                end = mid;
+            // Check if target is greater to middle element. If yes, take first half of array including mid
+            if (key  > pillarList.get(mid).getY())
+                start = mid;
         }
-        if(key > pillars.get(pillars.size() - 1).getY()){
-            return new Pair<>(pillars.size() - 1, pillars.get(pillars.size() - 1));
-        }
-        if (high <= low)
-            return returns(pillars,high,key);
-        else if (key == pillars.get(middle).getY())
-            return new Pair<>(middle,pillars.get(middle));
-        else if (key > pillars.get(middle).getY())
-            return search(key, pillars, middle + 1, high, index);
-        else
-            return search(key,pillars,low, middle, index);
+        // Now you will have only two numbers in array in which target number will fall
+        return pillarList.get(start);
+//
 
     }
 
-    private Pair<Integer, Pillar> returns(List<Pillar> pillars, int high, int value) {
-        return new Pair<>(high - 1,pillars.get(high - 1));
+    private Pillar search(List<Pillar> pillarList, int key, int low, int high, Vertex searched) {
+        int middle = low  + ((high - low) / 2);
+        if (key >= pillarList.get(pillarList.size() - 1).getY()){
+            return pillarList.get(pillarList.size() -1);
+        }
+        if(high == 0){
+            return pillarList.get(high + 1);
+        }
+        else if(high <= low){
+            return pillarList.get(low - 1);
+        }
+        if(key == pillarList.get(middle).getY()){
+            return pillarList.get(middle);
+        }
+        else if(key < pillarList.get(middle).getY()){
+            return search(pillarList,key,low, middle - 1, searched);
+        }
+        else{
+            return search(pillarList,key,middle + 1, high, searched);
+        }
     }
 
     private void initGraph(List<Pillar> pillarList, List<CircleType> circleTypes) {

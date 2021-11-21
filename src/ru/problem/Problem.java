@@ -12,15 +12,15 @@ public class Problem {
     private int W;
     private static Problem problem = null;
 
-
-    /**
-     * Parse the max circle from the input, parse the max pillar from the input
-     */
     private Problem(){
         this.pillars = new ArrayList<>();
         this.circles = new ArrayList<>();
     }
 
+    /**
+     * Singleton design pattern.
+     * @return instance of the problem
+     */
     public static Problem getInstance() {
         if ( problem == null){
             problem = new Problem();
@@ -28,9 +28,19 @@ public class Problem {
         return problem;
     }
 
+    /**
+     * Add a pillar with x and y coordinates
+     * @param x X coordinate
+     * @param y Y coordinate
+     */
     public void addPillar(int x, int y){
         this.pillars.add(new Pillar(x,y));
     }
+    /**
+     * Add a circle type with cost and r.
+     * @param cost Cost of the circle
+     * @param r Radius of the circle
+     */
     public void addCircle(int cost,int r){
         this.circles.add(new CircleType(cost,r));
     }

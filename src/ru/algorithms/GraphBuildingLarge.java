@@ -14,6 +14,7 @@ public class GraphBuildingLarge implements GraphBuilder{
     private final Problem problem;
     private final Vertex starting_vertex;
     private final Vertex end_vertex;
+    //Map to retrive vertex object from pillar and circleType
     private final HashMap<Pair<Pillar,CircleType>, Vertex> map;
 
     public GraphBuildingLarge(){
@@ -25,32 +26,35 @@ public class GraphBuildingLarge implements GraphBuilder{
         this.graph.addVertex(this.end_vertex);
         this.map = new LinkedHashMap<>();
     }
-
+    /**
+     * Creating the graph from the small problem.
+     */
     public void build() {
         final List<Pillar> pillarList = problem.getPillars();
         final List<CircleType> circleTypes = problem.getCircles();
-        pillarList.sort(Comparator.comparingInt(Pillar::getY));
-        circleTypes.sort((o1, o2) -> {
-             if(o1.getR() == o2.getR()){
-                 return -Integer.compare(o1.getCost(),o2.getCost());
-             }
-            return -Integer.compare(o1.getR(), o2.getR());
 
-        });
+        //Sort the circleTypes depending on R in descending order.
+        circleTypes.sort((o1, o2) -> -Integer.compare(o1.getR(), o2.getR()));
 
+        //Initialize the graph.
         initGraph(pillarList, circleTypes);
-        createDownEdges(pillarList, circleTypes);
+
+        //Create the up edges
+        createUpEdges(pillarList, circleTypes);
         for(Pillar from: pillarList){
             for(Pillar to: pillarList ){
+                //Initialize a pointer that points to the smallest circle.
                 int pointer_pillar = circleTypes.size() - 1;
                 for(CircleType circleType: circleTypes) {
                     Vertex vertexFrom = map.get(new Pair<>(from, circleType));
                     if (!from.equals(to)) {
+                        //Initialize a key that we are searching by using the distance formula
                         double searched = ProblemState.distance(from, to) - circleType.getR();
                         Pair<Integer,CircleType> canTouch = pointerSearch(pointer_pillar,searched,circleTypes);
                         if (canTouch != null ) {
                             Vertex fromTouches = map.get(new Pair<>(to, canTouch.getT()));
                             graph.addEdge(vertexFrom, fromTouches, canTouch.getT().getCost());
+                            //Pointer becomes the index that we found the circle.
                             pointer_pillar = canTouch.getK();
                         }
                         else{
@@ -65,6 +69,14 @@ public class GraphBuildingLarge implements GraphBuilder{
 
     }
 
+    /**
+     * Starting from pointer, loop to the head of the list
+     * and search for a circle that has bigger or equal radius to the searched.
+     * @param pointer Starting index for the search
+     * @param searched radius that we are searching for
+     * @param circleTypes List of circleTypes that is sorted by R in descending order.
+     * @return tuple of found circle and the index that we found the circle.
+     */
     private Pair<Integer, CircleType> pointerSearch(int pointer, double searched, List<CircleType> circleTypes) {
 
         for(int a = pointer; a >=  0; a--){
@@ -75,6 +87,12 @@ public class GraphBuildingLarge implements GraphBuilder{
         return null;
     }
 
+    /**
+     * Initialize the vertices for graph by looping through the possible pillars and circles.
+     * Add each vertex to the arraylist of vertices.
+     * @param pillarList List of pillars from the problem
+     * @param circleTypes List of circleTypes that is sorted by R in descending order.
+     */
     private void initGraph(List<Pillar> pillarList, List<CircleType> circleTypes) {
         for(Pillar pillar: pillarList){
             for(CircleType circleType: circleTypes){
@@ -92,7 +110,12 @@ public class GraphBuildingLarge implements GraphBuilder{
         }
     }
 
-    private void createDownEdges(List<Pillar> pillarList, List<CircleType> circleTypes) {
+    /**
+     * Create the upwards edges on the same pillar.
+     * @param pillarList List of pillars from the problem
+     * @param circleTypes List of circleTypes that is sorted by R in descending order.
+     */
+    private void createUpEdges(List<Pillar> pillarList, List<CircleType> circleTypes) {
         for (Pillar pillar : pillarList) {
             for (int j = 0; j < circleTypes.size() - 1; j++) {
                 Pair<Pillar,CircleType> pair0 = new Pair<>(pillar,circleTypes.get(j));

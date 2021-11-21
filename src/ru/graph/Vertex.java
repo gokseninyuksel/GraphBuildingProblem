@@ -5,6 +5,9 @@ import ru.utilities.Pillar;
 
 import java.util.Objects;
 
+/**
+ * Vertex class to represent the vertices of the graph. Which is tuple of pillar and circleType.
+ */
 public class Vertex{
     private final Pair<Pillar, CircleType> state;
     private int distance;

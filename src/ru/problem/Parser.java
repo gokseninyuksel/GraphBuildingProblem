@@ -14,6 +14,9 @@ public class Parser {
         this.problem = Problem.getInstance();
     }
 
+    /**
+     * Parse the input from DomJudge and update the model.
+     */
     public void parse(){
         Scanner scanner = new Scanner(System.in);
         String[] line = scanner.nextLine().split(" ");
@@ -32,6 +35,10 @@ public class Parser {
         }
         scanner.close();
     }
+
+    /**
+     * Run the algorithms we developed depending on the constraints.
+     */
     public void run() {
         GraphBuilder bob;
         if(problem.getCircles().size() <= 50)
@@ -42,6 +49,7 @@ public class Parser {
             bob = new GraphBuildingLine();
         bob.build();
         bob.run();
+        //If the end vertex is not visited by bfs return impossible. Else return the distance.
         String lowest = bob.lowestCost().isNotVisited() ? "Impossible" : String.valueOf(bob.lowestCost().getDistance());
         System.out.println(lowest);
     }

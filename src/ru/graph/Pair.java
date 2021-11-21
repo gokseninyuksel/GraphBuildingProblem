@@ -2,6 +2,11 @@ package ru.graph;
 
 import java.util.Objects;
 
+/**
+ * Simple Pair class to represent a tuple. It is generic, so it can be reusable.
+ * @param <K>
+ * @param <T>
+ */
 public class Pair<K,T>  {
     K k;
     T t;

@@ -2,6 +2,9 @@ package ru.utilities;
 
 import java.util.Objects;
 
+/**
+ * Class to represent disks.
+ */
 public class CircleType {
     private final int cost;
     private final int r;

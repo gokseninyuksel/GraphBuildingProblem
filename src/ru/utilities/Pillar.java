@@ -2,6 +2,9 @@ package ru.utilities;
 
 import java.util.Objects;
 
+/**
+ * Class to represent pillar.
+ */
 public class Pillar implements Comparable<Pillar> {
     private final int x;
     private final int y;
